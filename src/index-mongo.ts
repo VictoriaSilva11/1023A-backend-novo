@@ -12,6 +12,12 @@ app.get('/estudantes', async (req: Request, res: Response) => {
     const estudantes = await db.collection('estudantes').find().toArray();
     res.status(200).json(estudantes);
 });
+app.post('/estudantes', async (req: Request, res: Response)=>{
+    const estudante = req.body
+    const resultado = await db.collection('estudantes')
+    .insertOne(estudante)
+    res.status(201).json({...estudante, _id: resultado.insertedId})
+})
 
 app.listen(8000, () => {
     console.log('Server is running on port 8000');
