@@ -15,10 +15,9 @@ rotas.post('/produtos', produtoController.adicionar)
 rotas.get('/produtos', produtoController.listar)
 
 //Rotas para carrinho
-rotas.post('/carrinhos', carrinhoController.adicionarItem)
-rotas.get('/carrinhos', carrinhoController.listar)
-rotas.delete('/carrinhos/:id', carrinhoController.removerItem)
-rotas.put('/carrinhos/:id', carrinhoController.atualizarQuantidade)
-rotas.delete('/carrinhos/:usuarioId/itens/:produtoId', carrinhoController.removerItem)
+rotas.post('/carrinhos', carrinhoController.adicionarCarrinho)
+rotas.get('/carrinhos', carrinhoController.adicionarItem)
+rotas.put('/carrinhos/:id', carrinhoController.atualizarItem)
+rotas.delete('/carrinhos/:usuarioId/itens/:produtoId', carrinhoController.deletarCarrinho)
 
 export default rotas;
