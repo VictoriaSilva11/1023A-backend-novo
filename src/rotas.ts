@@ -21,3 +21,4 @@ rotas.put('/carrinhos/:id', carrinhoController.atualizarItem)
 rotas.delete('/carrinhos/:usuarioId/itens/:produtoId', carrinhoController.deletarCarrinho)
 
 export default rotas;
+
