@@ -1,28 +1,42 @@
-//Explicando o que é um middleware
-import jwt from 'jsonwebtoken'
-import {Request, Response, NextFunction} from 'express'
+import jwt from 'jsonwebtoken';
+import { jwtDecode } from 'jwt-decode';
+import { Request, Response, NextFunction } from 'express';
 
-interface RequestAuth extends Request{
-    usuarioId?:string
+interface RequestAuth extends Request {
+    usuarioId?: string;
+    tipo?: string;
 }
 
-function Auth(req:RequestAuth,res:Response,next:NextFunction){
-    const authHeader = req.headers.authorization
-    if(!authHeader)
-        return res.status(401).json({mensagem:"Token não fornecido!"})
-    const token = authHeader.split(" ")[1]!
-    jwt.verify(token,process.env.JWT_SECRET!,(err,decoded)=>{
-        if(err){
-            console.log(err)
-            return res.status(401).json({mensagem:"Token inválido!"})
-        }
-        if(typeof decoded==="string"||!decoded||!("usuarioId" in decoded))
-            return res.status(401).json({mensagem:"Payload inválido!"})
+function Auth(req: RequestAuth, res: Response, next: NextFunction) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+        return res.status(401).json({ mensagem: "Token não fornecido!" });
+
+    const token = authHeader.split(" ")[1]!;
+
+    try {
+        // decodifica apenas para leitura (sem verificar ainda)
+        const decoded: any = jwtDecode(token);
+
+        // valida o token de fato
+        jwt.verify(token, process.env.JWT_SECRET!);
 
         req.usuarioId = decoded.usuarioId;
-        next()
+        req.tipo = decoded.tipo;
 
-    })
+        next();
+    } catch (err) {
+        console.log(err);
+        return res.status(401).json({ mensagem: "Token inválido!" });
+    }
 }
 
-export default Auth
+// middleware específico para admins
+export function isAdmin(req: RequestAuth, res: Response, next: NextFunction) {
+    if (req.tipo !== 'admin') {
+        return res.status(403).json({ mensagem: "Acesso restrito a administradores!" });
+    }
+    next();
+}
+
+export default Auth;

@@ -21,7 +21,8 @@ interface Produto {
     nome:string,
     preco:number,
     descricao:string,
-    urlfoto:string
+    urlfoto:string,
+    categoria:string
 }
 interface RequestAuth extends Request{
     usuarioId?:string
@@ -33,19 +34,19 @@ class CarrinhoController {
         const { produtoId, quantidade } = req.body as {usuarioId: string, produtoId: string, quantidade: number};
         const usuarioId = req.usuarioId
         if(!usuarioId)
-            return res.status(401).json({mensagem:"Token não foi passado para adicionar no carrinho"})
+            return res.status(401).json({mensagem:"Token nao foi passado para adicionar no carrinho"})
 
         //Buscar o produto no banco de dados
         const produto = await db.collection<Produto>('produtos')
                         .findOne({ _id: ObjectId.createFromHexString(produtoId)});
         if(!produto)
-            return res.status(404).json({mensagem: 'Produto não encontrado'});
-        //Pegar o preço do produto
+            return res.status(404).json({mensagem: 'Produto nao encontrado'});
+        //Pegar o preco do produto
         //Pegar o nome do produto
         const nomeProduto = produto.nome;
         const precoProduto = produto.preco;
         
-        // Verificar se um carrinho com o usuário já existe
+        // Verificar se um carrinho com o usuario ja existe
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
 
         if(!carrinho){
@@ -111,11 +112,11 @@ class CarrinhoController {
 
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
         if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho não encontrado'});
+            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
         }
         const itemExistente = carrinho.itens.find(item => item.produtoId === produtoId);
         if(!itemExistente){
-            return res.status(404).json({mensagem: 'Item não encontrado'});
+            return res.status(404).json({mensagem: 'Item nao encontrado'});
         }
         const filtrados = carrinho.itens.filter(item => item.produtoId !== produtoId);
         const total = filtrados.reduce((total, item) => total + item.precoUnitario * item.quantidade, 0);
@@ -140,11 +141,11 @@ class CarrinhoController {
         const { produtoId , usuarioId, quantidade  } = req.body;
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
         if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho não encontrado'});
+            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
         }
         const itemExistente = carrinho.itens.find(item => item.produtoId === produtoId);
         if(!itemExistente){
-            return res.status(404).json({mensagem: 'Item não encontrado'});
+            return res.status(404).json({mensagem: 'Item nao encontrado'});
         }
         itemExistente.quantidade = quantidade;
         carrinho.total = carrinho.itens.reduce((total, item) => total + item.precoUnitario * item.quantidade, 0);
@@ -163,7 +164,7 @@ class CarrinhoController {
         const { usuarioId } = req.body;
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
         if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho não encontrado'});
+            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
         }
         return res.status(200).json(carrinho);
     }
@@ -171,7 +172,7 @@ class CarrinhoController {
         const { usuarioId } = req.body;
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
         if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho não encontrado'});
+            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
         }
         await db.collection<Carrinho>("carrinhos").deleteOne({usuarioId: usuarioId});
         return res.status(200).json({mensagem: 'Carrinho removido com sucesso'});

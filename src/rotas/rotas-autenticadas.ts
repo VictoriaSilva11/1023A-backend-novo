@@ -1,23 +1,32 @@
+import { Router } from "express";
 import usuarioController from "../usuarios/usuario.controller.js";
 import produtoController from "../produtos/produto.controller.js";
-
-import { Router} from "express";
 import carrinhoController from "../carrinho/carrinho.controller.js";
+import { isAdmin } from "../middleware/auth.js";
 
 const rotasAutenticadas = Router();
 
-//Criando rotasAutenticadas para os usuários
-rotasAutenticadas.post("/usuarios", usuarioController.adicionar);
+
+//Usuários autenticados
+
 rotasAutenticadas.get("/usuarios", usuarioController.listar);
 
 
-//rotasAutenticadas para produtos
-rotasAutenticadas.post("/produtos", produtoController.adicionar);
-rotasAutenticadas.get("/produtos", produtoController.listar);
+// Carrinho (usuário comum autenticado)
+
+rotasAutenticadas.post("/carrinho/adicionar", carrinhoController.adicionarItem);
+rotasAutenticadas.put("/carrinho/atualizar", carrinhoController.atualizarQuantidade);
+rotasAutenticadas.delete("/carrinho/removerItem", carrinhoController.removerItem);
+rotasAutenticadas.get("/carrinho/listar", carrinhoController.listar);
+rotasAutenticadas.delete("/carrinho/remover", carrinhoController.remover);
 
 
-//Ainda vamos ter que criar as rotasAutenticadas para carrinho e produtos
-rotasAutenticadas.post("/adicionarItem", carrinhoController.adicionarItem);
-//Tarefa para casa :)
+// Produtos
+
+rotasAutenticadas.get("/produtos", produtoController.listar); // todos podem ver
+rotasAutenticadas.post("/produtos", isAdmin, produtoController.adicionar); // admin cria
+rotasAutenticadas.put("/produtos/:id", isAdmin, produtoController.editar); // admin edita
+rotasAutenticadas.delete("/produtos/:id", isAdmin, produtoController.excluir); // admin exclui
 
 export default rotasAutenticadas;
+
