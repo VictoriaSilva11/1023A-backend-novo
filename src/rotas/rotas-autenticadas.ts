@@ -28,5 +28,8 @@ rotasAutenticadas.post("/produtos", isAdmin, produtoController.adicionar); // ad
 rotasAutenticadas.put("/produtos/:id", isAdmin, produtoController.editar); // admin edita
 rotasAutenticadas.delete("/produtos/:id", isAdmin, produtoController.excluir); // admin exclui
 
+
+
 export default rotasAutenticadas;
+
 

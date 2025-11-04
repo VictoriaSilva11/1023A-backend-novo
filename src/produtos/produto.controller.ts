@@ -14,15 +14,15 @@ interface Produto {
 class ProdutoController {
   // Criar produto (ADMIN)
   async adicionar(req: Request, res: Response) {
-    const { nome, preco, descricao, urlfoto } = req.body;
+    const { nome, preco, descricao, urlfoto, categoria } = req.body;
 
-    if (!nome || !preco || !descricao || !urlfoto ) {
+    if (!nome || !preco || !descricao || !urlfoto || !categoria) {
       return res
         .status(400)
         .json({ mensagem: "Campos obrigatorios: nome, preco, descricao, urlfoto, categoria" });
     }
 
-    const produto: Produto = { nome, preco, descricao, urlfoto };
+    const produto: Produto = { nome, preco, descricao, urlfoto, categoria };
     const resultado = await db.collection<Produto>("produtos").insertOne(produto);
 
     res.status(201).json({ ...produto, _id: resultado.insertedId });
