@@ -105,9 +105,10 @@ class CarrinhoController {
         )
         res.status(200).json(carrinho);
     }
+
     async removerItem(req:Request, res:Response) {
         const { produtoId , usuarioId } = req.body;
-        //Faça o removerItem
+        //CONSTRUA o removerItem
         //Do melhor jeito
 
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
@@ -120,6 +121,13 @@ class CarrinhoController {
         }
         const filtrados = carrinho.itens.filter(item => item.produtoId !== produtoId);
         const total = filtrados.reduce((total, item) => total + item.precoUnitario * item.quantidade, 0);
+        
+        // ADICIONEISSE: Se carrinho ficar vazio, deleta
+        if(filtrados.length === 0){
+            await db.collection<Carrinho>("carrinhos").deleteOne({usuarioId: usuarioId});
+            return res.status(200).json({mensagem: 'Item removido e carrinho vazio deletado'});
+        }
+
         const carrinhoAtualizado = {
             usuarioId: carrinho.usuarioId,
             itens: filtrados,
@@ -135,8 +143,8 @@ class CarrinhoController {
             }
         )
         return res.status(200).json(carrinhoAtualizado);
-
     }
+
     async atualizarQuantidade(req:Request, res:Response) {
         const { produtoId , usuarioId, quantidade  } = req.body;
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
@@ -160,6 +168,7 @@ class CarrinhoController {
         )
         return res.status(200).json(carrinho);
     }
+
     async listar(req:Request, res:Response) {
         const { usuarioId } = req.body;
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
@@ -168,6 +177,7 @@ class CarrinhoController {
         }
         return res.status(200).json(carrinho);
     }
+
     async remover(req:Request, res:Response) {
         const { usuarioId } = req.body;
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
