@@ -15,10 +15,10 @@ function Auth(req: RequestAuth, res: Response, next: NextFunction) {
     const token = authHeader.split(" ")[1]!;
 
     try {
-        // decodifica apenas para leitura (sem verificar ainda)
+      
         const decoded: any = jwtDecode(token);
 
-        // valida o token de fato
+
         jwt.verify(token, process.env.JWT_SECRET!);
 
         req.usuarioId = decoded.usuarioId;
@@ -31,7 +31,7 @@ function Auth(req: RequestAuth, res: Response, next: NextFunction) {
     }
 }
 
-// middleware específico para admins
+
 export function isAdmin(req: RequestAuth, res: Response, next: NextFunction) {
     if (req.tipo !== 'admin') {
         return res.status(403).json({ mensagem: "Acesso restrito a administradores!" });

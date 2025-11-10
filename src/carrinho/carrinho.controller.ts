@@ -18,38 +18,38 @@ interface Carrinho {
 
 interface Produto {
     _id: ObjectId;
-    nome:string,
-    preco:number,
-    descricao:string,
-    urlfoto:string,
-    categoria:string
+    nome: string,
+    preco: number,
+    descricao: string,
+    urlfoto: string,
+    categoria: string
 }
-interface RequestAuth extends Request{
-    usuarioId?:string
-} 
+interface RequestAuth extends Request {
+    usuarioId?: string
+}
 
 class CarrinhoController {
     //adicionarItem
-    async adicionarItem(req:RequestAuth, res:Response) {
-        const { produtoId, quantidade } = req.body as {usuarioId: string, produtoId: string, quantidade: number};
+    async adicionarItem(req: RequestAuth, res: Response) {
+        const { produtoId, quantidade } = req.body as { usuarioId: string, produtoId: string, quantidade: number };
         const usuarioId = req.usuarioId
-        if(!usuarioId)
-            return res.status(401).json({mensagem:"Token nao foi passado para adicionar no carrinho"})
+        if (!usuarioId)
+            return res.status(401).json({ mensagem: "Token nao foi passado para adicionar no carrinho" })
 
         //Buscar o produto no banco de dados
         const produto = await db.collection<Produto>('produtos')
-                        .findOne({ _id: ObjectId.createFromHexString(produtoId)});
-        if(!produto)
-            return res.status(404).json({mensagem: 'Produto nao encontrado'});
+            .findOne({ _id: ObjectId.createFromHexString(produtoId) });
+        if (!produto)
+            return res.status(404).json({ mensagem: 'Produto nao encontrado' });
         //Pegar o preco do produto
         //Pegar o nome do produto
         const nomeProduto = produto.nome;
         const precoProduto = produto.preco;
-        
-        // Verificar se um carrinho com o usuario ja existe
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
 
-        if(!carrinho){
+        // Verificar se um carrinho com o usuario ja existe
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
+
+        if (!carrinho) {
             const novoCarrinho: Carrinho = {
                 usuarioId: usuarioId,
                 itens: [{
@@ -68,7 +68,7 @@ class CarrinhoController {
                 dataAtualizacao: novoCarrinho.dataAtualizacao,
                 total: novoCarrinho.total,
                 _id: resposta.insertedId
-                
+
             }
             //return res.status(201).json({...novoCarrinho, _id: resposta.insertedId});
 
@@ -79,12 +79,12 @@ class CarrinhoController {
         //ELSE
         // Se existir, deve adicionar o item ao carrinho existente
         const itemExistente = carrinho.itens.find(item => item.produtoId === produtoId);
-        if(itemExistente){
+        if (itemExistente) {
             itemExistente.quantidade += quantidade;
             carrinho.total += precoProduto * quantidade;
             carrinho.dataAtualizacao = new Date();
         }
-        else{
+        else {
             carrinho.itens.push({
                 produtoId: produtoId,
                 quantidade: quantidade,
@@ -95,37 +95,38 @@ class CarrinhoController {
             carrinho.dataAtualizacao = new Date();
         }
         // Atualizar o carrinho no banco de dados
-        await db.collection<Carrinho>("carrinhos").updateOne({usuarioId: usuarioId},
-            {$set: {
-                itens: carrinho.itens, 
-                total: carrinho.total, 
-                dataAtualizacao: carrinho.dataAtualizacao
-            }
+        await db.collection<Carrinho>("carrinhos").updateOne({ usuarioId: usuarioId },
+            {
+                $set: {
+                    itens: carrinho.itens,
+                    total: carrinho.total,
+                    dataAtualizacao: carrinho.dataAtualizacao
+                }
             }
         )
         res.status(200).json(carrinho);
     }
 
-    async removerItem(req:Request, res:Response) {
-        const { produtoId , usuarioId } = req.body;
+    async removerItem(req: Request, res: Response) {
+        const { produtoId, usuarioId } = req.body;
         //CONSTRUA o removerItem
         //Do melhor jeito
 
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
-        if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
+        if (!carrinho) {
+            return res.status(404).json({ mensagem: 'Carrinho nao encontrado' });
         }
         const itemExistente = carrinho.itens.find(item => item.produtoId === produtoId);
-        if(!itemExistente){
-            return res.status(404).json({mensagem: 'Item nao encontrado'});
+        if (!itemExistente) {
+            return res.status(404).json({ mensagem: 'Item nao encontrado' });
         }
         const filtrados = carrinho.itens.filter(item => item.produtoId !== produtoId);
         const total = filtrados.reduce((total, item) => total + item.precoUnitario * item.quantidade, 0);
-        
+
         // ADICIONEISSE: Se carrinho ficar vazio, deleta
-        if(filtrados.length === 0){
-            await db.collection<Carrinho>("carrinhos").deleteOne({usuarioId: usuarioId});
-            return res.status(200).json({mensagem: 'Item removido e carrinho vazio deletado'});
+        if (filtrados.length === 0) {
+            await db.collection<Carrinho>("carrinhos").deleteOne({ usuarioId: usuarioId });
+            return res.status(200).json({ mensagem: 'Item removido e carrinho vazio deletado' });
         }
 
         const carrinhoAtualizado = {
@@ -134,59 +135,75 @@ class CarrinhoController {
             dataAtualizacao: new Date(),
             total: total
         }
-        await db.collection<Carrinho>("carrinhos").updateOne({usuarioId: usuarioId},
-            {$set: {
-                itens: carrinhoAtualizado.itens, 
-                total: carrinhoAtualizado.total, 
-                dataAtualizacao: carrinhoAtualizado.dataAtualizacao
-            }
+        await db.collection<Carrinho>("carrinhos").updateOne({ usuarioId: usuarioId },
+            {
+                $set: {
+                    itens: carrinhoAtualizado.itens,
+                    total: carrinhoAtualizado.total,
+                    dataAtualizacao: carrinhoAtualizado.dataAtualizacao
+                }
             }
         )
         return res.status(200).json(carrinhoAtualizado);
     }
 
-    async atualizarQuantidade(req:Request, res:Response) {
-        const { produtoId , usuarioId, quantidade  } = req.body;
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
-        if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
+    async atualizarQuantidade(req: Request, res: Response) {
+        const { produtoId, usuarioId, quantidade } = req.body;
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
+        if (!carrinho) {
+            return res.status(404).json({ mensagem: 'Carrinho nao encontrado' });
         }
         const itemExistente = carrinho.itens.find(item => item.produtoId === produtoId);
-        if(!itemExistente){
-            return res.status(404).json({mensagem: 'Item nao encontrado'});
+        if (!itemExistente) {
+            return res.status(404).json({ mensagem: 'Item nao encontrado' });
         }
         itemExistente.quantidade = quantidade;
         carrinho.total = carrinho.itens.reduce((total, item) => total + item.precoUnitario * item.quantidade, 0);
         carrinho.dataAtualizacao = new Date();
-        await db.collection<Carrinho>("carrinhos").updateOne({usuarioId: usuarioId},
-            {$set: {
-                itens: carrinho.itens, 
-                total: carrinho.total, 
-                dataAtualizacao: carrinho.dataAtualizacao
-            }
+        await db.collection<Carrinho>("carrinhos").updateOne({ usuarioId: usuarioId },
+            {
+                $set: {
+                    itens: carrinho.itens,
+                    total: carrinho.total,
+                    dataAtualizacao: carrinho.dataAtualizacao
+                }
             }
         )
         return res.status(200).json(carrinho);
     }
 
-    async listar(req:Request, res:Response) {
-        const { usuarioId } = req.body;
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
-        if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
+    // carrinho.controller.ts
+    async listar(req: Request, res: Response) {
+        const { usuarioId } = req.body; 
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
+        if (!carrinho) {
+            // Este 404 causa a mensagem de erro no frontend
+            return res.status(404).json({ mensagem: 'Carrinho nao encontrado' });
         }
         return res.status(200).json(carrinho);
     }
 
-    async remover(req:Request, res:Response) {
-        const { usuarioId } = req.body;
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({usuarioId: usuarioId});
-        if(!carrinho){
-            return res.status(404).json({mensagem: 'Carrinho nao encontrado'});
+    // Use RequestAuth em vez de Request
+    async remover(req: RequestAuth, res: Response) {
+        // 1. Pegue o usuarioId do token (igual ao adicionarItem)
+        const usuarioId = req.usuarioId;
+
+        // 2. Adicione uma verificação de segurança
+        if (!usuarioId) {
+            return res.status(401).json({ mensagem: "Token não fornecido ou inválido" });
         }
-        await db.collection<Carrinho>("carrinhos").deleteOne({usuarioId: usuarioId});
-        return res.status(200).json({mensagem: 'Carrinho removido com sucesso'});
+
+        // 3. O resto do seu código original está perfeito
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
+        if (!carrinho) {
+            return res.status(404).json({ mensagem: 'Carrinho nao encontrado' });
+        }
+
+        await db.collection<Carrinho>("carrinhos").deleteOne({ usuarioId: usuarioId });
+        return res.status(200).json({ mensagem: 'Carrinho removido com sucesso' });
+        
     }
 
+    
 }
 export default new CarrinhoController();
