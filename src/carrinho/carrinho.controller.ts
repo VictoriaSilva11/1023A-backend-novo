@@ -172,16 +172,17 @@ class CarrinhoController {
         return res.status(200).json(carrinho);
     }
 
-    // carrinho.controller.ts
-    async listar(req: Request, res: Response) {
-        const { usuarioId } = req.body; 
-        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
-        if (!carrinho) {
-            // Este 404 causa a mensagem de erro no frontend
-            return res.status(404).json({ mensagem: 'Carrinho nao encontrado' });
-        }
-        return res.status(200).json(carrinho);
-    }
+    // listar produtos no carrinho
+  async listar(req: RequestAuth, res: Response) {
+  const usuarioId = req.usuarioId;
+  if (!usuarioId) return res.status(401).json({ mensagem: "Token inválido!" });
+
+  const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId });
+  if (!carrinho) return res.status(404).json({ mensagem: "Carrinho não encontrado" });
+
+  return res.status(200).json(carrinho);
+}
+
 
     // Use RequestAuth em vez de Request
     async remover(req: RequestAuth, res: Response) {
@@ -205,5 +206,41 @@ class CarrinhoController {
     }
 
     
+    async listarTodos(req: Request, res: Response) {
+      try {
+        // Busca todos os carrinhos
+        const carrinhos = await db.collection<Carrinho>("carrinhos").find().toArray();
+
+        if (!carrinhos.length) {
+          return res.status(404).json({ mensagem: "Nenhum carrinho encontrado" });
+        }
+
+        // Pega os IDs de todos os usuários que têm carrinho
+        const usuariosIds = carrinhos.map((c) => new ObjectId(c.usuarioId));
+
+        // Busca os dados dos usuários
+        const usuarios = await db
+          .collection("usuarios")
+          .find({ _id: { $in: usuariosIds } })
+          .project({ nome: 1 }) // pega só o nome
+          .toArray();
+
+        // Junta as informações (carrinho + nome do usuário)
+        const resultado = carrinhos.map((c) => {
+          const usuario = usuarios.find((u) => u._id.toString() === c.usuarioId);
+          return {
+            ...c,
+            nomeUsuario: usuario ? usuario.nome : "Usuário não encontrado",
+          };
+        });
+
+        return res.status(200).json(resultado);
+      } catch (erro) {
+        console.error("Erro ao listar todos os carrinhos:", erro);
+        return res.status(500).json({ mensagem: "Erro ao listar carrinhos" });
+      }
+    }
+
 }
+
 export default new CarrinhoController();
