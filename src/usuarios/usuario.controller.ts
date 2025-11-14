@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../database/banco-mongo.js";
+import { ObjectId } from "mongodb";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -25,6 +26,42 @@ class UsuarioController {
         const usuarios = await db.collection('usuarios').find().toArray();
         res.status(200).json(usuarios);
     }
+
+
+    async deletarUsuario(req: Request, res: Response) {try {
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({ mensagem: "ID do usuário não fornecido" });
+      }
+
+      // Verifica se o ID é válido
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ mensagem: "ID inválido" });
+      }
+
+      // Exclui o usuário
+      const resultado = await db.collection("usuarios").deleteOne({
+        _id: new ObjectId(id)
+      });
+
+      if (resultado.deletedCount === 0) {
+        return res.status(404).json({ mensagem: "Usuário não encontrado" });
+      }
+
+      // Exclui também o carrinho do usuário, se existir (boa prática)
+      await db.collection("carrinhos").deleteOne({
+        usuarioId: id
+      });
+
+      return res.status(200).json({ mensagem: "Usuário excluído com sucesso!" });
+
+    } catch (erro) {
+      console.error("Erro ao excluir usuário:", erro);
+      return res.status(500).json({ mensagem: "Erro interno ao excluir usuário" });
+    }
+  }
+
 
     async login(req: Request, res: Response) {
         const { email, senha } = req.body;

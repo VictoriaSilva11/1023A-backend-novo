@@ -4,6 +4,7 @@ import produtoController from "../produtos/produto.controller.js";
 import carrinhoController from "../carrinho/carrinho.controller.js";
 import Auth, { isAdmin } from "../middleware/auth.js"; // <== IMPORTAR O Auth
 import estatisticasController from "../usuarios/estatisticas.controller.js";
+import deletarUsuarioController from "../usuarios/usuario.controller.js";
 
 const rotasAutenticadas = Router();
 
@@ -19,6 +20,7 @@ rotasAutenticadas.put("/carrinho/atualizar", carrinhoController.atualizarQuantid
 rotasAutenticadas.delete("/carrinho/removerItem", carrinhoController.removerItem);
 rotasAutenticadas.get("/carrinho/listar", carrinhoController.listar);
 rotasAutenticadas.delete("/carrinho/remover", carrinhoController.remover);
+rotasAutenticadas.delete("/usuarios/:id", isAdmin, deletarUsuarioController.deletarUsuario);
 
 // Produtos
 rotasAutenticadas.get("/produtos", produtoController.listar);

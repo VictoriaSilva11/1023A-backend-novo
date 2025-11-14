@@ -240,6 +240,9 @@ class CarrinhoController {
         return res.status(500).json({ mensagem: "Erro ao listar carrinhos" });
       }
     }
+    
+
+    
 
 }
 
