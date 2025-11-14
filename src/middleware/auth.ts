@@ -6,7 +6,6 @@ interface RequestAuth extends Request {
   usuarioId?: string;
   tipo?: string;
 }
-
 function Auth(req: RequestAuth, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
@@ -14,21 +13,14 @@ function Auth(req: RequestAuth, res: Response, next: NextFunction) {
   if (!authHeader) {
     return res.status(401).json({ mensagem: 'Token não fornecido!' });
   }
-
   const token = authHeader.split(' ')[1];
-
   if (!token) {
     return res.status(401).json({ mensagem: 'Token não fornecido!' });
   }
-
   try {
 
     jwt.verify(token, process.env.JWT_SECRET!);
-
-    
     const decoded: any = jwtDecode(token);
-
-    
     req.usuarioId = decoded.usuarioId;
     req.tipo = decoded.tipo;
 

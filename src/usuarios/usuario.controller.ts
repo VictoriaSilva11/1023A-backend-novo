@@ -42,10 +42,15 @@ class UsuarioController {
 
         // cria token com tipo de usuário
         const token = jwt.sign(
-            { usuarioId: usuario._id, tipo: usuario.tipo },
-            process.env.JWT_SECRET!,
-            { expiresIn: '1h' }
-        );
+    {
+        usuarioId: usuario._id,
+        nome: usuario.nome,      // <-- ADICIONAR ISSO
+        tipo: usuario.tipo
+    },
+    process.env.JWT_SECRET!,
+    { expiresIn: '1h' }
+);
+
 
         res.status(200).json({ token });
     }
