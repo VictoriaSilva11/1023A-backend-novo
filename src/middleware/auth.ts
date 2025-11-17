@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { jwtDecode } from 'jwt-decode';
+
 import { Request, Response, NextFunction } from 'express';
 
 interface RequestAuth extends Request {
