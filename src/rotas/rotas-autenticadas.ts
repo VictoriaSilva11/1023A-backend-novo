@@ -2,7 +2,7 @@ import { Router } from "express";
 import usuarioController from "../usuarios/usuario.controller.js";
 import produtoController from "../produtos/produto.controller.js";
 import carrinhoController from "../carrinho/carrinho.controller.js";
-import Auth, { isAdmin } from "../middleware/auth.js"; // <== IMPORTAR O Auth
+import Auth, { isAdmin } from "../middleware/auth.js"; 
 import estatisticasController from "../usuarios/estatisticas.controller.js";
 import deletarUsuarioController from "../usuarios/usuario.controller.js";
 
