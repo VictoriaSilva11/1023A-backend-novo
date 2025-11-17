@@ -49,7 +49,7 @@ class UsuarioController {
         return res.status(404).json({ mensagem: "Usuário não encontrado" });
       }
 
-      // Exclui também o carrinho do usuário, se existir (boa prática)
+      // Exclui também o carrinho do usuário, se existir 
       await db.collection("carrinhos").deleteOne({
         usuarioId: id
       });
@@ -81,7 +81,7 @@ class UsuarioController {
         const token = jwt.sign(
     {
         usuarioId: usuario._id,
-        nome: usuario.nome,      // <-- ADICIONAR ISSO
+        nome: usuario.nome,      
         tipo: usuario.tipo
     },
     process.env.JWT_SECRET!,

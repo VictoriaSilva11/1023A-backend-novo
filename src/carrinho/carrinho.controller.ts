@@ -109,8 +109,6 @@ class CarrinhoController {
 
     async removerItem(req: Request, res: Response) {
         const { produtoId, usuarioId } = req.body;
-        //CONSTRUA o removerItem
-        //Do melhor jeito
 
         const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId: usuarioId });
         if (!carrinho) {
