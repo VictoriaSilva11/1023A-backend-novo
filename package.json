@@ -22,7 +22,8 @@
     "jwt-decode": "^4.0.0",
     "mongodb": "^6.19.0",
     "mysql2": "^3.14.3",
-    "react-router-dom": "^7.9.5"
+    "react-router-dom": "^7.9.5",
+    "stripe": "^20.0.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

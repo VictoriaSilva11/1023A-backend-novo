@@ -1,10 +1,12 @@
 import { Router } from "express";
-import usuarioController from "../usuarios/usuario.controller.js";
-import produtoController from "../produtos/produto.controller.js";
-import carrinhoController from "../carrinho/carrinho.controller.js";
-import Auth, { isAdmin } from "../middleware/auth.js"; 
-import estatisticasController from "../usuarios/estatisticas.controller.js";
-import deletarUsuarioController from "../usuarios/usuario.controller.js";
+import usuarioController from "../usuarios/usuario.controller.ts";
+import produtoController from "../produtos/produto.controller.ts";
+import carrinhoController from "../carrinho/carrinho.controller.ts";
+import Auth, { isAdmin } from "../middleware/auth.ts"; 
+import estatisticasController from "../usuarios/estatisticas.controller.ts";
+import deletarUsuarioController from "../usuarios/usuario.controller.ts";
+import stripeRoutes from "../pagamentos/stripe.routes.ts";
+
 
 const rotasAutenticadas = Router();
 
@@ -30,6 +32,8 @@ rotasAutenticadas.delete("/produtos/:id", isAdmin, produtoController.excluir);
 rotasAutenticadas.get("/admin/estatisticas", isAdmin, estatisticasController.estatisticasCarrinhos);
 rotasAutenticadas.get("/admin/carrinhos", isAdmin, carrinhoController.listarTodos);
 
+//Rota de pagamento
+rotasAutenticadas.use("/stripe", stripeRoutes);
 
 
 export default rotasAutenticadas;
