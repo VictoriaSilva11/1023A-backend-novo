@@ -1,39 +1,44 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
+import { db } from "../database/banco-mongo.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-const YOUR_DOMAIN = "http://localhost:5173";
+interface RequestAuth extends Request {
+  usuarioId?: string;
+}
 
-class StripeController {
-  async criarSessao(req: Request, res: Response) {
+class PagamentoController {
+  async criarPagamentoCartao(req: RequestAuth, res: Response) {
     try {
-      const { items } = req.body;
+      const usuarioId = req.usuarioId;
+      if (!usuarioId)
+        return res.status(401).json({ mensagem: "Usuário não autenticado" });
 
-      const line_items = items.map((item: any) => ({
-        price_data: {
-          currency: "brl",
-          product_data: { name: item.nome },
-          unit_amount: Math.round(item.precoUnitario * 100),
-        },
-        quantity: item.quantidade,
-      }));
+      // Buscar carrinho no banco
+      const carrinho = await db.collection("carrinhos").findOne({ usuarioId });
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        line_items,
-        success_url: `${YOUR_DOMAIN}/pagamento-sucesso?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${YOUR_DOMAIN}/carrinho`,
+      if (!carrinho || carrinho.total <= 0)
+        return res.status(400).json({ mensagem: "Carrinho vazio" });
+
+      // Stripe usa centavos
+      const valorEmCentavos = Math.round(carrinho.total * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: valorEmCentavos,
+        currency: "brl",
+        payment_method_types: ["card"],
       });
 
-      return res.json({ url: session.url });
+      return res.status(200).json({
+        clientSecret: paymentIntent.client_secret,
+      });
 
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ mensagem: "Erro ao criar sessão de pagamento" });
+      console.error("Erro Stripe:", err);
+      return res.status(500).json({ mensagem: "Erro ao criar pagamento" });
     }
   }
 }
 
-export default new StripeController();
-
+export default new PagamentoController();
