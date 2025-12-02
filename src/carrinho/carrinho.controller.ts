@@ -29,6 +29,71 @@ interface RequestAuth extends Request {
 }
 
 class CarrinhoController {
+    
+    // listar produtos no carrinho (COM LÓGICA DE FILTRO CORRIGIDA E FINAL)
+    async listar(req: RequestAuth, res: Response) {
+        const usuarioId = req.usuarioId;
+        if (!usuarioId) return res.status(401).json({ mensagem: "Token inválido!" });
+
+        // 1. Encontrar o carrinho do usuário logado
+        const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId });
+        if (!carrinho) return res.status(404).json({ mensagem: "Carrinho não encontrado" });
+
+        // 2. Acessar os parâmetros de filtro da query
+        const { nome, minPreco, maxPreco, minQuantidade } = req.query;
+
+        // 3. Aplicar o filtro nos ITENS do carrinho
+        let itensFiltrados = carrinho.itens;
+
+        // --- Filtro 1: NOME (Busca parcial e insensível a maiúsculas/minúsculas) ---
+        if (nome && typeof nome === 'string') {
+            const regexNome = new RegExp(nome, 'i');
+            itensFiltrados = itensFiltrados.filter(item => 
+                regexNome.test(item.nome)
+            );
+        }
+
+        // --- Filtro 2: PREÇO (Mínimo e Máximo) ---
+        if (minPreco || maxPreco) {
+            // Conversão segura para número, usando Infinity como fallback
+            const min = minPreco ? parseFloat(minPreco as string) : -Infinity;
+            const max = maxPreco ? parseFloat(maxPreco as string) : Infinity;
+
+            // Garante que a filtragem só ocorre se os valores forem números válidos
+            if (!isNaN(min) && !isNaN(max)) {
+                itensFiltrados = itensFiltrados.filter(item => 
+                    item.precoUnitario >= min && item.precoUnitario <= max
+                );
+            }
+        }
+
+        // --- Filtro 3: QUANTIDADE MÍNIMA ---
+        if (minQuantidade) {
+            const minQtd = parseInt(minQuantidade as string);
+            
+            // Garante que a filtragem só ocorre se o valor for um número inteiro válido
+            if (!isNaN(minQtd)) {
+                itensFiltrados = itensFiltrados.filter(item => 
+                    item.quantidade >= minQtd
+                );
+            }
+        }
+        
+        // 4. Calcular o novo total (para exibição dos itens visíveis)
+        const totalFiltrado = itensFiltrados.reduce((total, item) => 
+            total + item.precoUnitario * item.quantidade, 0
+        );
+        
+        // 5. Retorna o objeto de carrinho com a lista de itens filtrada
+        const carrinhoFiltrado = {
+            ...carrinho, 
+            itens: itensFiltrados, // Esta é a lista que o frontend irá renderizar
+            totalFiltrado: totalFiltrado // Valor opcional para o frontend
+        };
+
+        return res.status(200).json(carrinhoFiltrado);
+    }
+    
     //adicionarItem
     async adicionarItem(req: RequestAuth, res: Response) {
         const { produtoId, quantidade } = req.body as { usuarioId: string, produtoId: string, quantidade: number };
@@ -169,18 +234,6 @@ class CarrinhoController {
         )
         return res.status(200).json(carrinho);
     }
-
-    // listar produtos no carrinho
-  async listar(req: RequestAuth, res: Response) {
-  const usuarioId = req.usuarioId;
-  if (!usuarioId) return res.status(401).json({ mensagem: "Token inválido!" });
-
-  const carrinho = await db.collection<Carrinho>("carrinhos").findOne({ usuarioId });
-  if (!carrinho) return res.status(404).json({ mensagem: "Carrinho não encontrado" });
-
-  return res.status(200).json(carrinho);
-}
-
 
     // Use RequestAuth em vez de Request
     async remover(req: RequestAuth, res: Response) {
